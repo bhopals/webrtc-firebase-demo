@@ -26,12 +26,28 @@ const servers = {
   iceCandidatePoolSize: 10,
 };
 
+// - Firebase - Signalling Server  OR can use WebSocket
+
 // Global State
+// Manages PEER-TO-PEER Connection
+/**
+ * It emits a bunch of different differnt events that we can listen to update the DB
+ * and to add the media stream to the connection iteself
+ *
+ * One important thing is does is generate an "Ice Candidates"
+ * but in order to do that, it requires which stun server to use.
+ */
 const pc = new RTCPeerConnection(servers);
+
+/**
+ * localStream - Yours cam
+ * remoteStream - Your friends cam
+ */
 let localStream = null;
 let remoteStream = null;
 
 // HTML elements
+// coz of Vanill js, we have to use the Imperative DOM Id's
 const webcamButton = document.getElementById("webcamButton");
 const webcamVideo = document.getElementById("webcamVideo");
 const callButton = document.getElementById("callButton");
@@ -42,6 +58,7 @@ const hangupButton = document.getElementById("hangupButton");
 
 // 1. Setup media sources
 
+// REGISTER an event handler
 webcamButton.onclick = async () => {
   localStream = await navigator.mediaDevices.getUserMedia({
     video: true,
@@ -50,6 +67,7 @@ webcamButton.onclick = async () => {
   remoteStream = new MediaStream();
 
   // Push tracks from local stream to peer connection
+  // PUSH Audio/Video to the peer connection
   localStream.getTracks().forEach((track) => {
     pc.addTrack(track, localStream);
   });
@@ -87,6 +105,7 @@ callButton.onclick = async () => {
   const offerDescription = await pc.createOffer();
   await pc.setLocalDescription(offerDescription);
 
+  // SDP - Session Description Protocol
   const offer = {
     sdp: offerDescription.sdp,
     type: offerDescription.type,
